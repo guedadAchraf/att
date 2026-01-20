@@ -10,10 +10,10 @@
       } 
     }
   ],
-  "routes": [
-    { 
-      "src": "/(.*)", 
-      "dest": "/index.html" 
+  "rewrites": [
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
     }
   ]
 }
