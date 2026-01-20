@@ -23,63 +23,21 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS configuration - MUST be before other middleware
+// CORS - Use the cors middleware properly for Vercel
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? [
-          'https://att-manageo.vercel.app',
-          'https://att-manageo-git-main-abderazzakatt.vercel.app'
-        ]
-      : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'];
-    
-    // Check if origin is allowed
-    const isAllowed = allowedOrigins.includes(origin);
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'https://att-manageo.vercel.app',
+    'https://att-manageo-git-main-abderazzakatt.vercel.app',
+    /^https:\/\/att-manageo.*\.vercel\.app$/
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Length'],
-  preflightContinue: false,
   optionsSuccessStatus: 200
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Additional CORS headers for all responses
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? ['https://att-manageo.vercel.app', 'https://att-manageo-git-main-abderazzakatt.vercel.app']
-    : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'];
-  
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-});
 
 // Root route
 app.get('/', (req, res) => {
