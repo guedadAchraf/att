@@ -92,7 +92,8 @@ app.get('/', (req, res) => {
     message: 'ATT Forms API is running',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production',
+   // environment: process.env.NODE_ENV || 'production',
+    environment:'production',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
