@@ -19,20 +19,42 @@ const app = express();
 
 // Middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false
 }));
 
+// CORS configuration - MUST be before other middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [
-        'https://att-manageo.vercel.app',
-        /^https:\/\/att-manageo.*\.vercel\.app$/
-      ]
-    : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.NODE_ENV === 'production' 
+      ? [
+          'https://att-manageo.vercel.app',
+          'https://att-manageo-git-main-abderazzakatt.vercel.app'
+        ]
+      : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'];
+    
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      }
+      return allowedOrigin.test(origin);
+    });
+    
+    if (isAllowed || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  exposedHeaders: ['Content-Length'],
   preflightContinue: false,
   optionsSuccessStatus: 200
 }));
@@ -40,13 +62,28 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
+// Additional CORS headers for all responses
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ['https://att-manageo.vercel.app', 'https://att-manageo-git-main-abderazzakatt.vercel.app']
+    : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
 });
 
 // Root route
@@ -55,7 +92,7 @@ app.get('/', (req, res) => {
     message: 'ATT Forms API is running',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || 'production',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
@@ -75,7 +112,12 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     database: process.env.DATABASE_URL ? 'Connected' : 'Not configured',
     cors: 'Enabled',
-    version: '1.0.0'
+    version: '1.0.0',
+    origin: req.headers.origin,
+    headers: {
+      'access-control-allow-origin': res.getHeader('Access-Control-Allow-Origin'),
+      'access-control-allow-credentials': res.getHeader('Access-Control-Allow-Credentials')
+    }
   });
 });
 
@@ -88,8 +130,18 @@ app.get('/api/test', (req, res) => {
     cors: {
       origin: req.headers.origin,
       method: req.method,
-      headers: req.headers
+      allowedOrigin: res.getHeader('Access-Control-Allow-Origin')
     }
+  });
+});
+
+// CORS test endpoint
+app.post('/api/cors-test', (req, res) => {
+  res.json({
+    message: 'CORS POST test successful',
+    timestamp: new Date().toISOString(),
+    origin: req.headers.origin,
+    body: req.body
   });
 });
 
