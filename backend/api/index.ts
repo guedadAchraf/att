@@ -37,14 +37,9 @@ app.use(cors({
       : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'];
     
     // Check if origin is allowed
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        return origin === allowedOrigin;
-      }
-      return allowedOrigin.test(origin);
-    });
+    const isAllowed = allowedOrigins.includes(origin);
     
-    if (isAllowed || allowedOrigins.includes(origin)) {
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);
@@ -69,7 +64,7 @@ app.use((req, res, next) => {
     ? ['https://att-manageo.vercel.app', 'https://att-manageo-git-main-abderazzakatt.vercel.app']
     : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'];
   
-  if (allowedOrigins.includes(origin)) {
+  if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   
@@ -107,6 +102,10 @@ app.get('/', (req, res) => {
 
 // Health check - MUST come before other routes
 app.get('/api/health', (req, res) => {
+  const origin = req.headers.origin || 'no-origin';
+  const allowOriginHeader = res.getHeader('Access-Control-Allow-Origin') || 'not-set';
+  const allowCredentialsHeader = res.getHeader('Access-Control-Allow-Credentials') || 'not-set';
+  
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
@@ -114,34 +113,39 @@ app.get('/api/health', (req, res) => {
     database: process.env.DATABASE_URL ? 'Connected' : 'Not configured',
     cors: 'Enabled',
     version: '1.0.0',
-    origin: req.headers.origin,
+    origin: origin,
     headers: {
-      'access-control-allow-origin': res.getHeader('Access-Control-Allow-Origin'),
-      'access-control-allow-credentials': res.getHeader('Access-Control-Allow-Credentials')
+      'access-control-allow-origin': allowOriginHeader,
+      'access-control-allow-credentials': allowCredentialsHeader
     }
   });
 });
 
 // Test endpoint
 app.get('/api/test', (req, res) => {
+  const origin = req.headers.origin || 'no-origin';
+  const allowOriginHeader = res.getHeader('Access-Control-Allow-Origin') || 'not-set';
+  
   res.json({
     message: 'Test endpoint working',
     timestamp: new Date().toISOString(),
     status: 'OK',
     cors: {
-      origin: req.headers.origin,
+      origin: origin,
       method: req.method,
-      allowedOrigin: res.getHeader('Access-Control-Allow-Origin')
+      allowedOrigin: allowOriginHeader
     }
   });
 });
 
 // CORS test endpoint
 app.post('/api/cors-test', (req, res) => {
+  const origin = req.headers.origin || 'no-origin';
+  
   res.json({
     message: 'CORS POST test successful',
     timestamp: new Date().toISOString(),
-    origin: req.headers.origin,
+    origin: origin,
     body: req.body
   });
 });
