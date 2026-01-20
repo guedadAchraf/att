@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "projects": [
+    {
+      "name": "att-manageo",
+      "source": "frontend"
+    },
+    {
+      "name": "att-manageo-backend", 
+      "source": "backend"
+    }
+  ]
+}
