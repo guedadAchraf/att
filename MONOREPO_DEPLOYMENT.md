@@ -54,7 +54,7 @@ ALLOWED_ORIGINS=https://att-manageo.vercel.app
    - **Framework Preset:** Angular
    - **Root Directory:** `frontend`
    - **Build Command:** `npm run vercel-build`
-   - **Output Directory:** `dist/forms-management-frontend`
+   - **Output Directory:** `dist/forms-management`
    - **Install Command:** `npm install`
 
 4. **Déployer** → URL: `https://att-manageo.vercel.app`
@@ -157,7 +157,7 @@ Ouvrir https://att-manageo.vercel.app dans le navigateur
       "src": "package.json", 
       "use": "@vercel/static-build", 
       "config": { 
-        "distDir": "dist/forms-management-frontend" 
+        "distDir": "dist/forms-management" 
       } 
     }
   ]
