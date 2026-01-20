@@ -40,7 +40,6 @@ git push -u origin main
 DATABASE_URL=postgresql://neondb_owner:npg_dRteKqDZ9k8u@ep-green-queen-agb1x5ja-pooler.c-2.eu-central-1.aws.neon.tech/att_forms?sslmode=require&channel_binding=require
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-2024
 NODE_ENV=production
-ALLOWED_ORIGINS=https://att-manageo.vercel.app
 ```
 
 5. **Déployer** → URL: `https://att-manageo-backend.vercel.app`
