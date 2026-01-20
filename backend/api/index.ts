@@ -26,7 +26,7 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? [
         'https://att-forms-frontend.vercel.app',
-        'https://your-frontend-domain.vercel.app',
+        'https://att-manageo.vercel.app',
         /\.vercel\.app$/
       ]
     : ['http://localhost:3000', 'http://localhost:5173'],
