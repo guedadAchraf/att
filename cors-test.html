@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test for ATT Forms</h1>
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <button onclick="testLogin()">Test Login Endpoint</button>
+    <button onclick="testCorsEndpoint()">Test CORS Endpoint</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9;">
+        <h3>Results:</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        const API_BASE = 'https://att-manageo-backend.vercel.app/api';
+        const output = document.getElementById('output');
+
+        function log(message) {
+            output.textContent += new Date().toISOString() + ': ' + message + '\n';
+        }
+
+        async function testHealth() {
+            log('Testing health endpoint...');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                log('Health test SUCCESS: ' + JSON.stringify(data, null, 2));
+            } catch (error) {
+                log('Health test ERROR: ' + error.message);
+            }
+        }
+
+        async function testLogin() {
+            log('Testing login endpoint...');
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@att-forms.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('Login test SUCCESS: ' + JSON.stringify(data, null, 2));
+                } else {
+                    log('Login test FAILED: ' + response.status + ' ' + response.statusText);
+                }
+            } catch (error) {
+                log('Login test ERROR: ' + error.message);
+            }
+        }
+
+        async function testCorsEndpoint() {
+            log('Testing CORS endpoint...');
+            try {
+                const response = await fetch(`${API_BASE}/cors-test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        test: 'CORS test data'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('CORS test SUCCESS: ' + JSON.stringify(data, null, 2));
+                } else {
+                    log('CORS test FAILED: ' + response.status + ' ' + response.statusText);
+                }
+            } catch (error) {
+                log('CORS test ERROR: ' + error.message);
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            log('Starting CORS tests...');
+            setTimeout(testHealth, 1000);
+            setTimeout(testLogin, 2000);
+            setTimeout(testCorsEndpoint, 3000);
+        };
+    </script>
+</body>
+</html>

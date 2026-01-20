@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
@@ -23,18 +22,22 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS - Use the cors middleware properly for Vercel
-app.use(cors({
-  origin: [
-    'https://att-manageo.vercel.app',
-    'https://att-manageo-git-main-abderazzakatt.vercel.app',
-    /^https:\/\/att-manageo.*\.vercel\.app$/
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 200
-}));
+// CORS middleware - simplified to work with Vercel headers
+app.use((req, res, next) => {
+  // Set CORS headers explicitly (Vercel headers might not work for all cases)
+  res.header('Access-Control-Allow-Origin', 'https://att-manageo.vercel.app');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Max-Age', '86400');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -45,8 +48,7 @@ app.get('/', (req, res) => {
     message: 'ATT Forms API is running',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-   // environment: process.env.NODE_ENV || 'production',
-    environment:'production',
+    environment: 'production',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
